@@ -2,6 +2,7 @@
 
 var wrap = require('word-wrap');
 var map = require('lodash.map');
+var util = require('util');
 var longest = require('longest');
 var chalk = require('chalk');
 
@@ -38,12 +39,13 @@ var filterSubject = function(subject) {
 // fine.
 module.exports = function(options) {
   var types = options.types;
+  var messages = options.messages;
 
   var length = longest(Object.keys(types)).length + 1;
   var choices = map(types, function(type, key) {
     return {
-      name: (key + ':').padEnd(length) + ' ' + type.description,
-      value: key
+      name: (type.emoji + key + ':').padEnd(length + type.emoji.length) + ' ' + type.description,
+      value: type.emoji + ' ' + key
     };
   });
 
@@ -71,7 +73,7 @@ module.exports = function(options) {
         {
           type: 'list',
           name: 'type',
-          message: "Select the type of change that you're committing:",
+          message: util.format(messages.type) || ("Select the type of change that you're committing:"),
           choices: choices,
           default: options.defaultType
         },
@@ -79,7 +81,7 @@ module.exports = function(options) {
           type: 'input',
           name: 'scope',
           message:
-            'What is the scope of this change (e.g. component or file name): (press enter to skip)',
+            util.format(messages.scope) || ('What is the scope of this change (e.g. component or file name): (press enter to skip)'),
           default: options.defaultScope,
           filter: function(value) {
             return options.disableScopeLowerCase
@@ -92,23 +94,24 @@ module.exports = function(options) {
           name: 'subject',
           message: function(answers) {
             return (
-              'Write a short, imperative tense description of the change (max ' +
+              util.format(messages.subject, String(maxSummaryLength(options, answers))) ||
+              ('Write a short, imperative tense description of the change (max ' +
               maxSummaryLength(options, answers) +
-              ' chars):\n'
+              ' chars):\n')
             );
           },
           default: options.defaultSubject,
           validate: function(subject, answers) {
             var filteredSubject = filterSubject(subject);
             return filteredSubject.length == 0
-              ? 'subject is required'
+              ? (util.format(messages.subjectEmpty) || ('subject is required'))
               : filteredSubject.length <= maxSummaryLength(options, answers)
               ? true
-              : 'Subject length must be less than or equal to ' +
+                : (util.format(messages.subjectExceedsLimit, String(maxSummaryLength(options, answers), String(filteredSubject.length))) || ('Subject length must be less than or equal to ' +
                 maxSummaryLength(options, answers) +
                 ' characters. Current length is ' +
                 filteredSubject.length +
-                ' characters.';
+                ' characters.'));
           },
           transformer: function(subject, answers) {
             var filteredSubject = filterSubject(subject);
@@ -126,13 +129,13 @@ module.exports = function(options) {
           type: 'input',
           name: 'body',
           message:
-            'Provide a longer description of the change: (press enter to skip)\n',
+            util.format(messages.body) || ('Provide a longer description of the change: (press enter to skip)\n'),
           default: options.defaultBody
         },
         {
           type: 'confirm',
           name: 'isBreaking',
-          message: 'Are there any breaking changes?',
+          message: util.format(messages.isBreaking) || ('Are there any breaking changes?'),
           default: false
         },
         {
@@ -140,21 +143,21 @@ module.exports = function(options) {
           name: 'breakingBody',
           default: '-',
           message:
-            'A BREAKING CHANGE commit requires a body. Please enter a longer description of the commit itself:\n',
+            util.format(messages.breakingBody) || ('A BREAKING CHANGE commit requires a body. Please enter a longer description of the commit itself:\n'),
           when: function(answers) {
             return answers.isBreaking && !answers.body;
           },
           validate: function(breakingBody, answers) {
             return (
               breakingBody.trim().length > 0 ||
-              'Body is required for BREAKING CHANGE'
+              (util.format(messages.breakingBodyEmpty) || ('Body is required for BREAKING CHANGE'))
             );
           }
         },
         {
           type: 'input',
           name: 'breaking',
-          message: 'Describe the breaking changes:\n',
+          message: util.format(messages.breaking) || ('Describe the breaking changes:\n'),
           when: function(answers) {
             return answers.isBreaking;
           }
@@ -163,7 +166,7 @@ module.exports = function(options) {
         {
           type: 'confirm',
           name: 'isIssueAffected',
-          message: 'Does this change affect any open issues?',
+          message: util.format(messages.isIssueAffected) || ('Does this change affect any open issues?'),
           default: options.defaultIssues ? true : false
         },
         {
@@ -171,7 +174,7 @@ module.exports = function(options) {
           name: 'issuesBody',
           default: '-',
           message:
-            'If issues are closed, the commit requires a body. Please enter a longer description of the commit itself:\n',
+            util.format(messages.issuesBody) || ('If issues are closed, the commit requires a body. Please enter a longer description of the commit itself:\n'),
           when: function(answers) {
             return (
               answers.isIssueAffected && !answers.body && !answers.breakingBody
@@ -181,7 +184,7 @@ module.exports = function(options) {
         {
           type: 'input',
           name: 'issues',
-          message: 'Add issue references (e.g. "fix #123", "re #123".):\n',
+          message: util.format(messages.issues) || ('Add issue references (e.g. "fix #123", "re #123".):\n'),
           when: function(answers) {
             return answers.isIssueAffected;
           },

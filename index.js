@@ -1,12 +1,44 @@
 'format cjs';
 
+const CC_CONFIG_NAME = '.cc-config.js';
+
+var findConfig = require('find-config');
+var path = require('path');
 var engine = require('./engine');
-var conventionalCommitTypes = require('conventional-commit-types');
 var configLoader = require('commitizen').configLoader;
 
+const readConfigFile = () => {
+  let ccConfig = findConfig.require(CC_CONFIG_NAME, { home: false });
+  if (ccConfig) {
+    return ccConfig;
+  }
+  let pkg = findConfig('package.json', { home: false });
+  if (pkg) {
+    const pkgDir = path.dirname(pkg);
+    pkg = require(pkg);
+    if (pkg.config && pkg.config['cc-customizable'] && pkg.config['cc-customizable'].config) {
+      // resolve relative to discovered package.json
+      const pkgPath = path.resolve(pkgDir, pkg.config['cc-customizable'].config);
+      return require(pkgPath);
+    }
+  }
+  ccConfig = findConfig.require(CC_CONFIG_NAME, { home: true });
+  if (ccConfig) {
+    return ccConfig;
+  }
+  ccConfig = require('./config');
+  if (ccConfig) {
+    return ccConfig;
+  }
+  return null;
+};
+
+var conventionalCommitConfig = readConfigFile();
 var config = configLoader.load() || {};
+
 var options = {
-  types: config.types || conventionalCommitTypes.types,
+  types: conventionalCommitConfig.types || config.types,
+  messages: conventionalCommitConfig.messages || {} ,
   defaultType: process.env.CZ_TYPE || config.defaultType,
   defaultScope: process.env.CZ_SCOPE || config.defaultScope,
   defaultSubject: process.env.CZ_SUBJECT || config.defaultSubject,

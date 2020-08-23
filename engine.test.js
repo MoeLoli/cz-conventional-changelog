@@ -4,13 +4,15 @@ var engine = require('./engine');
 var mock = require('mock-require');
 var semver = require('semver');
 
-var types = require('conventional-commit-types').types;
+var types = require('./config').types;
+var messages = require('./config').messages;
 
 var expect = chai.expect;
 chai.should();
 
 var defaultOptions = {
   types,
+  messages,
   maxLineWidth: 100,
   maxHeaderWidth: 100
 };
