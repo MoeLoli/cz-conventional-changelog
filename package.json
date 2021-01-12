@@ -1,12 +1,7 @@
 {
   "name": "cz-conventional-changelog-emoji",
-<<<<<<< HEAD
   "version": "0.1.0",
   "description": "Commitizen adapter following the conventional-changelog format with emoji.",
-=======
-  "version": "0.0.0-semantically-released.0",
-  "description": "Commitizen adapter following the conventional-changelog format.",
->>>>>>> 752b5e5b84206a41c39002aa75de76f46f982079
   "main": "index.js",
   "scripts": {
     "commit": "git-cz",
