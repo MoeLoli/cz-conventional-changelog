@@ -22,9 +22,9 @@ var maxSummaryLength = function(options, answers) {
   return options.maxHeaderWidth - headerLength(answers);
 };
 
-var filterSubject = function(subject) {
+var filterSubject = function(subject, disableSubjectLowerCase) {
   subject = subject.trim();
-  if (subject.charAt(0).toLowerCase() !== subject.charAt(0)) {
+  if (!disableSubjectLowerCase && subject.charAt(0).toLowerCase() !== subject.charAt(0)) {
     subject =
       subject.charAt(0).toLowerCase() + subject.slice(1, subject.length);
   }
@@ -102,7 +102,7 @@ module.exports = function(options) {
           },
           default: options.defaultSubject,
           validate: function(subject, answers) {
-            var filteredSubject = filterSubject(subject);
+            var filteredSubject = filterSubject(subject, options.disableSubjectLowerCase);
             return filteredSubject.length == 0
               ? (util.format(messages.subjectEmpty) || ('subject is required'))
               : filteredSubject.length <= maxSummaryLength(options, answers)
@@ -114,7 +114,7 @@ module.exports = function(options) {
                 ' characters.'));
           },
           transformer: function(subject, answers) {
-            var filteredSubject = filterSubject(subject);
+            var filteredSubject = filterSubject(subject, options.disableSubjectLowerCase);
             var color =
               filteredSubject.length <= maxSummaryLength(options, answers)
                 ? chalk.green
@@ -122,7 +122,7 @@ module.exports = function(options) {
             return color('(' + filteredSubject.length + ') ' + subject);
           },
           filter: function(subject) {
-            return filterSubject(subject);
+            return filterSubject(subject, options.disableSubjectLowerCase);
           }
         },
         {
